@@ -1,44 +1,42 @@
-Python 3.14.5 (tags/v3.14.5:5607950, May 10 2026, 10:43:50) [MSC v.1944 64 bit (AMD64)] on win32
-Enter "help" below or click "Help" above for more information.
->>> import streamlit as st
-... import pandas as pd
-... import numpy as np
-... import matplotlib.pyplot as plt
-... import io
-... from io import BytesIO
-... 
-... # ==========================================
-... # 1. PAGE CONFIGURATION & PREMIUM SKIN
-... # ==========================================
-... st.set_page_config(page_title="Production Scheduling System", layout="wide")
-... 
-... # Custom architectural skin injection (Premium Editorial Looks)
-... st.markdown("""
-...     <style>
-...         @import url('https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap');
-...         html, body, [class*="css"] {
-...             font-family: 'Inter', sans-serif;
-...         }
-...         
-...         .stApp {
-...             background-color: #faf8f2;
-...         }
-...         
-...         section[data-testid="stSidebar"] {
-...             background-color: #f4efdc !important;
-...             border-right: 1px solid #e5dfcb;
-...         }
-...         section[data-testid="stSidebar"] h1, 
-...         section[data-testid="stSidebar"] h2, 
-...         section[data-testid="stSidebar"] h3 {
-...             color: #6a0708 !important;
-...             font-weight: 700;
-...         }
-...         
-...         div[data-baseweb="input"] {
-...             background-color: #ffffff !important; 
-...             border: 1px solid #e5dfcb !important;
-...             border-radius: 6px !important;
+import streamlit as st
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import io
+from io import BytesIO
+
+# ==========================================
+# 1. PAGE CONFIGURATION & PREMIUM SKIN
+# ==========================================
+st.set_page_config(page_title="Production Scheduling System", layout="wide")
+
+# Custom architectural skin injection (Premium Editorial Looks)
+st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap');
+        html, body, [class*="css"] {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .stApp {
+            background-color: #faf8f2;
+        }
+        
+        section[data-testid="stSidebar"] {
+            background-color: #f4efdc !important;
+            border-right: 1px solid #e5dfcb;
+        }
+        section[data-testid="stSidebar"] h1, 
+        section[data-testid="stSidebar"] h2, 
+        section[data-testid="stSidebar"] h3 {
+            color: #6a0708 !important;
+            font-weight: 700;
+        }
+        
+        div[data-baseweb="input"] {
+            background-color: #ffffff !important; 
+            border: 1px solid #e5dfcb !important;
+            border-radius: 6px !important;
         }
         
         input {
@@ -313,3 +311,4 @@ if df_working is not None and not df_working.empty:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 else:
+    st.info("💡 Establish baseline job transaction vectors above to trigger automated queue metric calculations.")
