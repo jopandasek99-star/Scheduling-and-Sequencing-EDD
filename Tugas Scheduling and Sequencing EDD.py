@@ -6,42 +6,40 @@ import io
 from io import BytesIO
 
 # ==========================================
-# 1. PAGE CONFIGURATION & ARCHITECTURAL SKIN
+# 1. PAGE CONFIGURATION & AGGRESSIVE PREMIUM SKIN
 # ==========================================
 st.set_page_config(page_title="EDD Scheduling System", layout="wide")
 
-# Premium Editorial Skin Injection (Palet: Dark Sienna, Rosewood & Off-White)
+# Jalur paksa kustomisasi warna (Palet: Dark Sienna, Rosewood & Off-White)
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         
-        /* Base Typography */
-        html, body, [class*="css"] {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+        /* Force Global Background & Text */
+        html, body, [data-testid="stAppViewContainer"], .stApp {
             background-color: #fdfcf9 !important;
             color: #250902 !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
         }
         
-        .stApp {
-            background-color: #fdfcf9;
-        }
-        
-        /* Right Sidebar Panel styling */
+        /* Force Right Sidebar Panel Background to Dark Sienna */
         section[data-testid="stSidebar"] {
             background-color: #38040e !important;
-            border-left: 1px solid #250902;
-            border-right: none !important;
+            border-left: 1px solid #250902 !important;
         }
+        
+        /* Force Sidebar Text & Labels to Off-White */
+        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
         section[data-testid="stSidebar"] h1, 
         section[data-testid="stSidebar"] h2, 
         section[data-testid="stSidebar"] h3,
-        section[data-testid="stSidebar"] p,
         section[data-testid="stSidebar"] label {
             color: #fdfcf9 !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
         }
         
-        /* Clean Input Elements */
-        div[data-baseweb="input"], div[data-baseweb="data-editor"] {
+        /* Clean Data Editor & Inputs */
+        div[data-baseweb="input"], div[data-baseweb="data-editor"], [data-testid="stDataEditor"] {
             background-color: #ffffff !important; 
             border: 1px solid #e2dcd5 !important;
             border-radius: 8px !important;
@@ -52,19 +50,19 @@ st.markdown("""
             font-weight: 600 !important;
         }
         
-        /* Headings & Dividers */
+        /* Headings Typography */
         h1, h2, h3, h4, h5, h6 {
             color: #38040e !important;
             font-weight: 700 !important;
-            letter-spacing: -0.02em;
+            letter-spacing: -0.02em !important;
         }
         
+        /* Dividers color mapping */
         hr {
             border-top: 1px solid #e2dcd5 !important;
-            margin: 2.5rem 0 !important;
         }
         
-        /* Professional Buttons */
+        /* Professional Buttons (Rosewood to Crimson Red Hover) */
         .stButton>button {
             background-color: #640d14 !important;
             color: #fdfcf9 !important;
@@ -72,20 +70,18 @@ st.markdown("""
             border: none !important;
             font-weight: 600 !important;
             padding: 0.6rem 2.5rem !important;
-            transition: all 0.25s ease;
         }
         .stButton>button:hover {
             background-color: #800e13 !important;
-            box-shadow: 0 4px 15px rgba(100,13,20,0.2);
-            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(100,13,20,0.2) !important;
         }
         
         /* Custom Info Cards style */
         .metric-card {
-            background-color: #ffffff; 
-            padding: 18px; 
-            border-radius: 8px; 
-            border: 1px solid #e2dcd5;
+            background-color: #ffffff !important; 
+            padding: 18px !important; 
+            border-radius: 8px !important; 
+            border: 1px solid #e2dcd5 !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -187,22 +183,22 @@ if df_working is not None and not df_working.empty:
         
         c1, c2, c3, c4 = st.columns(4)
         with c1:
-            st.markdown(f"""<div class='metric-card' style='border-left: 4px solid #640d14;'>
+            st.markdown(f"""<div class='metric-card' style='border-left: 4px solid #640d14 !important;'>
                             <div style='color: #640d14; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;'>Average Flow Time</div>
                             <div style='font-size: 22px; font-weight: 700; color: #250902; margin-top: 4px;'>{avg_flow_time:.2f} Days</div>
                             </div>""", unsafe_allow_html=True)
         with c2:
-            st.markdown(f"""<div class='metric-card' style='border-left: 4px solid #800e13;'>
+            st.markdown(f"""<div class='metric-card' style='border-left: 4px solid #800e13 !important;'>
                             <div style='color: #800e13; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;'>Average Tardiness</div>
                             <div style='font-size: 22px; font-weight: 700; color: #250902; margin-top: 4px;'>{avg_tardiness:.2f} Days</div>
                             </div>""", unsafe_allow_html=True)
         with c3:
-            st.markdown(f"""<div class='metric-card' style='border-left: 4px solid #ad2831;'>
+            st.markdown(f"""<div class='metric-card' style='border-left: 4px solid #ad2831 !important;'>
                             <div style='color: #ad2831; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;'>Maximum Tardiness</div>
                             <div style='font-size: 22px; font-weight: 700; color: #250902; margin-top: 4px;'>{max_tardiness} Days</div>
                             </div>""", unsafe_allow_html=True)
         with c4:
-            st.markdown(f"""<div class='metric-card' style='border-left: 4px solid #250902; background-color: #fffaf5;'>
+            st.markdown(f"""<div class='metric-card' style='border-left: 4px solid #250902 !important; background-color: #fffaf5 !important;'>
                             <div style='color: #250902; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;'>Jobs in System (Avg)</div>
                             <div style='font-size: 22px; font-weight: 700; color: #38040e; margin-top: 4px;'>{(total_flow_time / df_edd['Processing Time (Days)'].sum()):.2f} Jobs</div>
                             </div>""", unsafe_allow_html=True)
