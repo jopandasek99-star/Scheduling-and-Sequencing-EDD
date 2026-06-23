@@ -24,7 +24,8 @@ st.markdown("""
         
         section[data-testid="stSidebar"] {
             background-color: #f4efdc !important;
-            border-right: 1px solid #e5dfcb;
+            border-left: 1px solid #e5dfcb;
+            border-right: none !important;
         }
         section[data-testid="stSidebar"] h1, 
         section[data-testid="stSidebar"] h2, 
@@ -72,19 +73,27 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Master Header Platform Branding
+# Master Header Platform Branding - CLEAN LOOK
 st.title("Tugas Sistem Produksi Scheduling & Sequencing Earliest Due Date")
-st.caption("Decision Support System for Single-Machine Sequencing Optimization using EDD Rule")
-
-edd_help = "EARLIEST DUE DATE (EDD): Sorts jobs based on their deadlines. It minimizes the maximum tardiness of the jobs schedule."
-st.caption("• Priority Rule: Earliest Due Date (EDD)", help=edd_help)
 st.markdown("---")
 
 # ==========================================
-# 2. SIDEBAR - CONFIGURATION PANEL
+# 2. SIDEBAR (KANAN) - INFO & THEORETICAL PANEL
 # ==========================================
-st.sidebar.header("Configuration Panel")
-st.sidebar.markdown("Configure operational status parameters or project setup references.")
+# Secara default, Streamlit menaruh sidebar di kiri. Kita gunakan trik sidebar ini sebagai Panel Informasi Teori.
+st.sidebar.markdown("### 👋 Hello, Master!")
+st.sidebar.markdown("Selamat datang di platform simulasi optimasi penjadwalan produksi.")
+st.sidebar.markdown("---")
+st.sidebar.markdown("### Apa itu Scheduling & Sequencing EDD?")
+st.sidebar.markdown("""
+**Earliest Due Date (EDD)** adalah metode pengurutan (*sequencing*) pengerjaan dalam manajemen operasi mesin tunggal (*single-machine*) yang memprioritaskan pekerjaan berdasarkan **batas waktu pengerjaan (Due Date) paling awal**.
+
+Aturan ini secara matematis terbukti paling optimal untuk **meminimalkan waktu keterlambatan maksimal (*maximum tardiness*)** dari seluruh kumpulan tugas yang masuk di lantai produksi.
+""")
+
+# Input parameter dipindahkan ke body utama atau tetap di sidebar atas panel kanan
+st.sidebar.markdown("---")
+st.sidebar.markdown("#### Timeline Setup")
 scheduling_start = st.sidebar.number_input("Scheduling Start Time (T=0)", min_value=0, value=0, step=1)
 
 # ==========================================
@@ -237,10 +246,9 @@ if df_working is not None and not df_working.empty:
         original_idx = df_edd[df_edd['Job ID'] == job_id].index[0]
         bar_color = colors_pool[original_idx % len(colors_pool)]
         
-        # Tinggi y-axis untuk penempatan blok barh
         y_bottom = idx * 10 + 2
         y_height = 6
-        y_top_edge = y_bottom + y_height  # Ini adalah batas atas dari blok job
+        y_top_edge = y_bottom + y_height
         
         # LOGIKA POTONG & ARSIR JIKA TERLAMBAT:
         if comp_time > due_date:
@@ -248,43 +256,32 @@ if df_working is not None and not df_working.empty:
                 ontime_duration = due_date - job_start
                 tardy_duration = comp_time - due_date
                 
-                # Plot bagian aman (solid)
                 ax.broken_barh([(job_start, ontime_duration)], (y_bottom, y_height), facecolors=bar_color, edgecolor='#333333', linewidth=1, alpha=0.95)
-                # Plot bagian terlambat (arsir/hatched)
                 ax.broken_barh([(due_date, tardy_duration)], (y_bottom, y_height), facecolors=bar_color, edgecolor='#333333', linewidth=1, hatch='//', alpha=0.9)
             else:
-                # Seluruh durasi job sudah terlambat sejak awal mulainya
                 ax.broken_barh([(job_start, proc_time)], (y_bottom, y_height), facecolors=bar_color, edgecolor='#333333', linewidth=1, hatch='//', alpha=0.9)
         else:
-            # Aman sepenuhnya (solid)
             ax.broken_barh([(job_start, proc_time)], (y_bottom, y_height), facecolors=bar_color, edgecolor='#333333', linewidth=1, alpha=0.95)
             
-        # Label teks di tengah blok cell
         ax.text(job_start + proc_time/2, y_bottom + y_height/2, f"{job_id}\n({proc_time} Hari)", 
                 ha='center', va='center', color='white', fontweight='bold', fontsize=9)
         
-        # Garis deadline merah putus-putus
         ax.axvline(x=due_date, color='#b91c1c', linestyle='--', linewidth=1.2, alpha=0.7)
-        
-        # PERBAIKAN: Teks DL digedein, ditaruh DI ATAS BLOK (y_top_edge + 0.4), dan posisinya dinamis (+0.2 dari due_date)
         ax.text(due_date + 0.2, y_top_edge + 0.4, f"DL: {due_date}", 
                 color='#b91c1c', fontsize=11, fontweight='bold', ha='left', va='bottom')
         
         y_labels.append(job_id)
         
-    # PENYETELAN DETAIL SUMBU X (Skala Grid Rapat 1,2,3,4...)
     max_horizon = max(accumulator + 2, df_edd['Due Date (Day Count)'].max() + 5)
     ax.set_xlabel('Horizon Waktu Produksi (Hari)', fontsize=10, fontweight='bold', color='#6a0708')
     ax.set_ylabel('Daftar Antrean Kerja (Job ID)', fontsize=10, fontweight='bold', color='#6a0708')
     
-    # Trik detail skala sumbu X per 1 satuan angka:
     ax.set_xticks(np.arange(0, max_horizon, 1))
     ax.set_xticklabels(np.arange(0, max_horizon, 1).astype(int), fontsize=8)
     
     ax.set_yticks([i*10 + 5 for i in range(len(df_edd_reversed))])
     ax.set_yticklabels(y_labels, fontsize=9, fontweight='bold')
     ax.set_xlim(0, max_horizon)
-    # Memberikan ruang y-limit sedikit lebih tinggi agar teks DL teratas tidak terpotong bingkai grafik
     ax.set_ylim(0, len(df_edd_reversed)*10 + 9)
     ax.grid(True, linestyle=':', alpha=0.6, axis='x')
     
@@ -306,6 +303,20 @@ if df_working is not None and not df_working.empty:
         * **Legenda Visual Grafik:** * Blok warna **Solid (Polos)** = Durasi pengerjaan aman (sebelum batas deadline).
           * Blok warna **Berarsir miring (`//`)** = Durasi pengerjaan yang terlambat (*Tardiness*) karena melewati batas garis merah putus-putus (`DL`).
         """)
+
+    # ==========================================
+    # 5B. CARA PEMAKAIAN SISTEM (NUMERIC POINTS)
+    # ==========================================
+    st.markdown("---")
+    st.subheader("📋 Panduan Cara Pemakaian Sistem")
+    st.markdown("""
+    1. **Pilih Metode Input Data:** Pilih opsi **Manual Interface Input** untuk memasukkan data Anda sendiri atau klik **Use Template Dataset** untuk memuat data simulasi secara instan.
+    2. **Tentukan Jumlah Job:** Jika memilih input manual, masukkan jumlah antrean pekerjaan (*job*) yang ingin dihitung melalui kolom input angka yang disediakan.
+    3. **Isi Parameter Job:** Masukkan nilai durasi waktu kerja pada kolom **Processing Time (Days)** dan batas tenggat waktu pada kolom **Due Date (Day Count)** di tabel editor yang interaktif.
+    4. **Evaluasi Hasil Kalkulasi:** Periksa tabel optimasi EDD yang otomatis mengurutkan baris berdasarkan tenggat waktu terdekat dan perhatikan kartu indikator KPI rata-rata performa.
+    5. **Analisis Gantt Chart:** Lihat grafik visualisasi di bagian bawah untuk mendeteksi bagian kerja yang aman (warna solid) dan bagian yang terlambat (warna berarsir miring `//`).
+    6. **Unduh Laporan Resmi:** Klik tombol **Download Production Schedule Report (Excel)** untuk mengekstrak lembar kerja hasil optimasi ke format Excel.
+    """)
 
     # ==========================================
     # 6. EXPORT MANAGEMENT REPORTING DATA
