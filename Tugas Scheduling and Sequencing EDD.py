@@ -210,63 +210,94 @@ if df_working is not None and not df_working.empty:
     st.markdown("---")
     st.header("Peta Penjadwalan & Linimasa Operasional (EDD Gantt Chart)")
     
-    cg1, cg2 = st.columns([2, 1])
+    # Plotting Gantt Chart dengan full-width layout yang dinamis
+    fig, ax = plt.subplots(figsize=(14, 5.5))
+    fig.patch.set_facecolor('#faf8f2')
+    ax.set_facecolor('#faf8f2')
     
-    with cg1:
-        fig, ax = plt.subplots(figsize=(10, 5))
-        fig.patch.set_facecolor('#faf8f2')
-        ax.set_facecolor('#faf8f2')
-        
-        y_labels = []
-        colors_pool = ['#6a0708', '#415a77', '#2a9d8f', '#e9c46a', '#e76f51', '#264653', '#9b5de5', '#f15bb5', '#00bbf9', '#00f5d4']
-        
-        start_times_dict = {}
-        accumulator = scheduling_start
-        for index, row in df_edd.iterrows():
-            start_times_dict[row['Job ID']] = accumulator
-            accumulator += row['Processing Time (Days)']
+    y_labels = []
+    colors_pool = ['#6a0708', '#415a77', '#2a9d8f', '#e9c46a', '#e76f51', '#264653', '#9b5de5', '#f15bb5', '#00bbf9', '#00f5d4']
+    
+    # Buat mapping urutan start time
+    start_times_dict = {}
+    accumulator = scheduling_start
+    for index, row in df_edd.iterrows():
+        start_times_dict[row['Job ID']] = accumulator
+        accumulator += row['Processing Time (Days)']
 
-        df_edd_reversed = df_edd.iloc[::-1].reset_index(drop=True)
+    df_edd_reversed = df_edd.iloc[::-1].reset_index(drop=True)
 
-        for idx, row in enumerate(df_edd_reversed.itertuples()):
-            job_id = row._1
-            proc_time = row._2
-            due_date = row._3
-            job_start = start_times_dict[job_id]
-            
-            original_idx = df_edd[df_edd['Job ID'] == job_id].index[0]
-            bar_color = colors_pool[original_idx % len(colors_pool)]
-            
+    for idx, row in enumerate(df_edd_reversed.itertuples()):
+        job_id = row._1
+        proc_time = row._2
+        due_date = row._3
+        comp_time = row._4
+        job_start = start_times_dict[job_id]
+        
+        original_idx = df_edd[df_edd['Job ID'] == job_id].index[0]
+        bar_color = colors_pool[original_idx % len(colors_pool)]
+        
+        # LOGIKA POTONG & ARSIR JIKA TERLAMBAT:
+        # Jika job start sudah melewati due date atau waktu selesai melewati due date
+        if comp_time > due_date:
+            if job_start < due_date:
+                # Sebagian tepat waktu, sebagian terlambat
+                ontime_duration = due_date - job_start
+                tardy_duration = comp_time - due_date
+                
+                # Plot bagian aman (solid)
+                ax.broken_barh([(job_start, ontime_duration)], (idx*10 + 2, 6), facecolors=bar_color, edgecolor='#333333', linewidth=1, alpha=0.95)
+                # Plot bagian terlambat (arsir/hatched)
+                ax.broken_barh([(due_date, tardy_duration)], (idx*10 + 2, 6), facecolors=bar_color, edgecolor='#333333', linewidth=1, hatch='//', alpha=0.9)
+            else:
+                # Seluruh durasi job sudah terlambat sejak awal mulainya
+                ax.broken_barh([(job_start, proc_time)], (idx*10 + 2, 6), facecolors=bar_color, edgecolor='#333333', linewidth=1, hatch='//', alpha=0.9)
+        else:
+            # Aman sepenuhnya (solid)
             ax.broken_barh([(job_start, proc_time)], (idx*10 + 2, 6), facecolors=bar_color, edgecolor='#333333', linewidth=1, alpha=0.95)
-            ax.text(job_start + proc_time/2, idx*10 + 5, f"{job_id}\n({proc_time} Hari)", 
-                    ha='center', va='center', color='white', fontweight='bold', fontsize=9)
             
-            ax.axvline(x=due_date, color='#b91c1c', linestyle='--', linewidth=1.2, alpha=0.7)
-            ax.text(due_date + 0.2, idx*10 + 7, f"DL: {due_date}", color='#b91c1c', fontsize=8, fontweight='semibold')
-            
-            y_labels.append(job_id)
-            
-        ax.set_xlabel('Horizon Waktu Produksi (Hari)', fontsize=10, fontweight='bold', color='#6a0708')
-        ax.set_ylabel('Daftar Antrean Kerja (Job ID)', fontsize=10, fontweight='bold', color='#6a0708')
-        ax.set_yticks([i*10 + 5 for i in range(len(df_edd_reversed))])
-        ax.set_yticklabels(y_labels, fontsize=9, fontweight='bold')
-        ax.set_xlim(0, max(accumulator + 2, df_edd['Due Date (Day Count)'].max() + 5))
-        ax.set_ylim(0, len(df_edd_reversed)*10 + 5)
-        ax.grid(True, linestyle=':', alpha=0.5, axis='x')
+        # Label teks di tengah blok cell
+        ax.text(job_start + proc_time/2, idx*10 + 5, f"{job_id}\n({proc_time} Hari)", 
+                ha='center', va='center', color='white', fontweight='bold', fontsize=9)
         
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
+        # Garis deadline merah putus-putus
+        ax.axvline(x=due_date, color='#b91c1c', linestyle='--', linewidth=1.2, alpha=0.7)
+        ax.text(due_date + 0.2, idx*10 + 7, f"DL: {due_date}", color='#b91c1c', fontsize=8, fontweight='semibold')
         
-        plt.tight_layout()
-        st.pyplot(fig)
+        y_labels.append(job_id)
         
-    with cg2:
-        st.markdown("### Analisis Peta Operasional")
+    # PENYETELAN DETAIL SUMBU X (Skala Grid Rapat 1,2,3,4...)
+    max_horizon = max(accumulator + 2, df_edd['Due Date (Day Count)'].max() + 5)
+    ax.set_xlabel('Horizon Waktu Produksi (Hari)', fontsize=10, fontweight='bold', color='#6a0708')
+    ax.set_ylabel('Daftar Antrean Kerja (Job ID)', fontsize=10, fontweight='bold', color='#6a0708')
+    
+    # Trik detail skala sumbu X per 1 satuan angka:
+    ax.set_xticks(np.arange(0, max_horizon, 1))
+    ax.set_xticklabels(np.arange(0, max_horizon, 1).astype(int), fontsize=8)
+    
+    ax.set_yticks([i*10 + 5 for i in range(len(df_edd_reversed))])
+    ax.set_yticklabels(y_labels, fontsize=9, fontweight='bold')
+    ax.set_xlim(0, max_horizon)
+    ax.set_ylim(0, len(df_edd_reversed)*10 + 5)
+    ax.grid(True, linestyle=':', alpha=0.6, axis='x')
+    
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    plt.tight_layout()
+    st.pyplot(fig)
+    
+    # Analisis berada tepat di bawah peta penjadwalan
+    st.markdown("### Analisis Peta Operasional")
+    c_info, c_desc = st.columns([1, 2])
+    with c_info:
         st.info(f"💡 **Urutan Eksekusi Mesin Tunggal:** \n**{' ➔ '.join(df_edd['Job ID'].tolist())}**")
+    with c_desc:
         st.markdown(f"""
         * **Waktu Selesai Total (Makespan):** Seluruh rangkaian pengerjaan akan rampung pada hari ke-**{df_edd['Completion Time (Waktu Selesai)'].max()}**.
         * **Keterlambatan Maksimal:** Batas keterlambatan terlama berhasil ditekan hingga maksimal **{max_tardiness} hari**.
-        * **Catatan Grafik:** Garis putus-putus merah (`DL`) menunjukkan batas waktu (*Due Date*). Jika kotak bar warna melewati garis merahnya, maka *job* tersebut mengalami *Tardiness* (Keterlambatan).
+        * **Legenda Visual Grafik:** * Blok warna **Solid (Polos)** = Durasi pengerjaan aman (sebelum batas deadline).
+          * Blok warna **Berarsir miring (`//`)** = Durasi pengerjaan yang terlambat (*Tardiness*) karena melewati batas garis merah putus-putus (`DL`).
         """)
 
     # ==========================================
