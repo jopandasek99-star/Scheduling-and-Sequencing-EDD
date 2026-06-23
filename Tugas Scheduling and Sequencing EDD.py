@@ -211,7 +211,7 @@ if df_working is not None and not df_working.empty:
     st.header("Peta Penjadwalan & Linimasa Operasional (EDD Gantt Chart)")
     
     # Plotting Gantt Chart dengan full-width layout yang dinamis
-    fig, ax = plt.subplots(figsize=(14, 5.5))
+    fig, ax = plt.subplots(figsize=(14, 6))
     fig.patch.set_facecolor('#faf8f2')
     ax.set_facecolor('#faf8f2')
     
@@ -237,32 +237,38 @@ if df_working is not None and not df_working.empty:
         original_idx = df_edd[df_edd['Job ID'] == job_id].index[0]
         bar_color = colors_pool[original_idx % len(colors_pool)]
         
+        # Tinggi y-axis untuk penempatan blok barh
+        y_bottom = idx * 10 + 2
+        y_height = 6
+        y_top_edge = y_bottom + y_height  # Ini adalah batas atas dari blok job
+        
         # LOGIKA POTONG & ARSIR JIKA TERLAMBAT:
-        # Jika job start sudah melewati due date atau waktu selesai melewati due date
         if comp_time > due_date:
             if job_start < due_date:
-                # Sebagian tepat waktu, sebagian terlambat
                 ontime_duration = due_date - job_start
                 tardy_duration = comp_time - due_date
                 
                 # Plot bagian aman (solid)
-                ax.broken_barh([(job_start, ontime_duration)], (idx*10 + 2, 6), facecolors=bar_color, edgecolor='#333333', linewidth=1, alpha=0.95)
+                ax.broken_barh([(job_start, ontime_duration)], (y_bottom, y_height), facecolors=bar_color, edgecolor='#333333', linewidth=1, alpha=0.95)
                 # Plot bagian terlambat (arsir/hatched)
-                ax.broken_barh([(due_date, tardy_duration)], (idx*10 + 2, 6), facecolors=bar_color, edgecolor='#333333', linewidth=1, hatch='//', alpha=0.9)
+                ax.broken_barh([(due_date, tardy_duration)], (y_bottom, y_height), facecolors=bar_color, edgecolor='#333333', linewidth=1, hatch='//', alpha=0.9)
             else:
                 # Seluruh durasi job sudah terlambat sejak awal mulainya
-                ax.broken_barh([(job_start, proc_time)], (idx*10 + 2, 6), facecolors=bar_color, edgecolor='#333333', linewidth=1, hatch='//', alpha=0.9)
+                ax.broken_barh([(job_start, proc_time)], (y_bottom, y_height), facecolors=bar_color, edgecolor='#333333', linewidth=1, hatch='//', alpha=0.9)
         else:
             # Aman sepenuhnya (solid)
-            ax.broken_barh([(job_start, proc_time)], (idx*10 + 2, 6), facecolors=bar_color, edgecolor='#333333', linewidth=1, alpha=0.95)
+            ax.broken_barh([(job_start, proc_time)], (y_bottom, y_height), facecolors=bar_color, edgecolor='#333333', linewidth=1, alpha=0.95)
             
         # Label teks di tengah blok cell
-        ax.text(job_start + proc_time/2, idx*10 + 5, f"{job_id}\n({proc_time} Hari)", 
+        ax.text(job_start + proc_time/2, y_bottom + y_height/2, f"{job_id}\n({proc_time} Hari)", 
                 ha='center', va='center', color='white', fontweight='bold', fontsize=9)
         
         # Garis deadline merah putus-putus
         ax.axvline(x=due_date, color='#b91c1c', linestyle='--', linewidth=1.2, alpha=0.7)
-        ax.text(due_date + 0.2, idx*10 + 7, f"DL: {due_date}", color='#b91c1c', fontsize=8, fontweight='semibold')
+        
+        # PERBAIKAN: Teks DL digedein, ditaruh DI ATAS BLOK (y_top_edge + 0.4), dan posisinya dinamis (+0.2 dari due_date)
+        ax.text(due_date + 0.2, y_top_edge + 0.4, f"DL: {due_date}", 
+                color='#b91c1c', fontsize=11, fontweight='bold', ha='left', va='bottom')
         
         y_labels.append(job_id)
         
@@ -278,7 +284,8 @@ if df_working is not None and not df_working.empty:
     ax.set_yticks([i*10 + 5 for i in range(len(df_edd_reversed))])
     ax.set_yticklabels(y_labels, fontsize=9, fontweight='bold')
     ax.set_xlim(0, max_horizon)
-    ax.set_ylim(0, len(df_edd_reversed)*10 + 5)
+    # Memberikan ruang y-limit sedikit lebih tinggi agar teks DL teratas tidak terpotong bingkai grafik
+    ax.set_ylim(0, len(df_edd_reversed)*10 + 9)
     ax.grid(True, linestyle=':', alpha=0.6, axis='x')
     
     ax.spines['top'].set_visible(False)
