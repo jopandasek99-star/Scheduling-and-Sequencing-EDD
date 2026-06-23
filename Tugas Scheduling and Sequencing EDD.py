@@ -6,63 +6,70 @@ import io
 from io import BytesIO
 
 # ==========================================
-# 1. PAGE CONFIGURATION & AGGRESSIVE PREMIUM SKIN
+# 1. PAGE CONFIGURATION & TOTAL BRUTAL SKIN OVERRIDE
 # ==========================================
 st.set_page_config(page_title="EDD Scheduling System", layout="wide")
 
-# Jalur paksa kustomisasi warna (Palet: Dark Sienna, Rosewood & Off-White)
+# Jalur paksa tingkat tinggi (Override paksa background bawaan Streamlit)
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         
-        /* Force Global Background & Text */
-        html, body, [data-testid="stAppViewContainer"], .stApp {
+        /* 1. PAKSA BACKGROUND UTAMA (OFF-WHITE) */
+        html, body, .stApp, .main, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
             background-color: #fdfcf9 !important;
             color: #250902 !important;
             font-family: 'Plus Jakarta Sans', sans-serif !important;
         }
         
-        /* Force Right Sidebar Panel Background to Dark Sienna */
-        section[data-testid="stSidebar"] {
+        /* 2. PAKSA SIDEBAR KANAN JADI DARK SIENNA (#38040e) */
+        section[data-testid="stSidebar"], [data-testid="stSidebarUserContent"] {
             background-color: #38040e !important;
-            border-left: 1px solid #250902 !important;
+            border-left: 2px solid #250902 !important;
         }
         
-        /* Force Sidebar Text & Labels to Off-White */
-        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
-        section[data-testid="stSidebar"] h1, 
-        section[data-testid="stSidebar"] h2, 
-        section[data-testid="stSidebar"] h3,
+        /* Paksa semua teks di dalam sidebar jadi putih gading */
+        section[data-testid="stSidebar"] *, 
+        section[data-testid="stSidebar"] p, 
+        section[data-testid="stSidebar"] span, 
         section[data-testid="stSidebar"] label {
             color: #fdfcf9 !important;
             font-family: 'Plus Jakarta Sans', sans-serif !important;
         }
         
-        /* Clean Data Editor & Inputs */
+        /* Input start time di sidebar agar kotak inputnya tetap putih teksnya hitam */
+        section[data-testid="stSidebar"] input {
+            color: #38040e !important;
+            background-color: #ffffff !important;
+        }
+        
+        /* 3. KUSTOMISASI INPUT & EDITOR DI HALAMAN UTAMA */
         div[data-baseweb="input"], div[data-baseweb="data-editor"], [data-testid="stDataEditor"] {
             background-color: #ffffff !important; 
             border: 1px solid #e2dcd5 !important;
             border-radius: 8px !important;
         }
         
-        input {
+        main input {
             color: #38040e !important; 
             font-weight: 600 !important;
         }
         
-        /* Headings Typography */
-        h1, h2, h3, h4, h5, h6 {
+        /* 4. JUDUL & HEADER */
+        h1, h2, h3, h4, h5, h6, main span, main p, main label {
             color: #38040e !important;
-            font-weight: 700 !important;
-            letter-spacing: -0.02em !important;
+            font-weight: 700;
         }
         
-        /* Dividers color mapping */
+        main p, main label {
+            font-weight: 400 !important;
+        }
+        
         hr {
             border-top: 1px solid #e2dcd5 !important;
         }
         
-        /* Professional Buttons (Rosewood to Crimson Red Hover) */
+        /* 5. TOMBOL ROSEWOOD (#640d14) */
         .stButton>button {
             background-color: #640d14 !important;
             color: #fdfcf9 !important;
@@ -76,7 +83,7 @@ st.markdown("""
             box-shadow: 0 4px 15px rgba(100,13,20,0.2) !important;
         }
         
-        /* Custom Info Cards style */
+        /* 6. KARTU METRIK */
         .metric-card {
             background-color: #ffffff !important; 
             padding: 18px !important; 
@@ -214,7 +221,6 @@ if df_working is not None and not df_working.empty:
     ax.set_facecolor('#ffffff')
     
     y_labels = []
-    # Dinamisasi Palet Warna Baru: Kombinasi Eksklusif Red-Sienna Palette
     colors_pool = ['#640d14', '#38040e', '#800e13', '#ad2831', '#250902']
     
     start_times_dict = {}
