@@ -78,22 +78,12 @@ st.title("Tugas Sistem Produksi Scheduling & Sequencing Earliest Due Date")
 st.markdown("---")
 
 # ==========================================
-# 2. SIDEBAR (KANAN) - INFO & THEORETICAL PANEL
+# 2. SIDEBAR (KANAN) - CLEAN & DIRECT INFO
 # ==========================================
-# Secara default, Streamlit menaruh sidebar di kiri. Kita gunakan trik sidebar ini sebagai Panel Informasi Teori.
-st.sidebar.markdown("### 👋 Hello, Master!")
-st.sidebar.markdown("Selamat datang di platform simulasi optimasi penjadwalan produksi.")
+st.sidebar.markdown("### Hello")
+st.sidebar.markdown("Earliest due date is a sequencing rule that sorts jobs based on their deadlines to minimize maximum tardiness.")
 st.sidebar.markdown("---")
-st.sidebar.markdown("### Apa itu Scheduling & Sequencing EDD?")
-st.sidebar.markdown("""
-**Earliest Due Date (EDD)** adalah metode pengurutan (*sequencing*) pengerjaan dalam manajemen operasi mesin tunggal (*single-machine*) yang memprioritaskan pekerjaan berdasarkan **batas waktu pengerjaan (Due Date) paling awal**.
-
-Aturan ini secara matematis terbukti paling optimal untuk **meminimalkan waktu keterlambatan maksimal (*maximum tardiness*)** dari seluruh kumpulan tugas yang masuk di lantai produksi.
-""")
-
-# Input parameter dipindahkan ke body utama atau tetap di sidebar atas panel kanan
-st.sidebar.markdown("---")
-st.sidebar.markdown("#### Timeline Setup")
+st.sidebar.markdown("Please input the scheduling start time below:")
 scheduling_start = st.sidebar.number_input("Scheduling Start Time (T=0)", min_value=0, value=0, step=1)
 
 # ==========================================
@@ -219,7 +209,6 @@ if df_working is not None and not df_working.empty:
     st.markdown("---")
     st.header("Peta Penjadwalan & Linimasa Operasional (EDD Gantt Chart)")
     
-    # Plotting Gantt Chart dengan full-width layout yang dinamis
     fig, ax = plt.subplots(figsize=(14, 6))
     fig.patch.set_facecolor('#faf8f2')
     ax.set_facecolor('#faf8f2')
@@ -227,7 +216,6 @@ if df_working is not None and not df_working.empty:
     y_labels = []
     colors_pool = ['#6a0708', '#415a77', '#2a9d8f', '#e9c46a', '#e76f51', '#264653', '#9b5de5', '#f15bb5', '#00bbf9', '#00f5d4']
     
-    # Buat mapping urutan start time
     start_times_dict = {}
     accumulator = scheduling_start
     for index, row in df_edd.iterrows():
@@ -250,7 +238,6 @@ if df_working is not None and not df_working.empty:
         y_height = 6
         y_top_edge = y_bottom + y_height
         
-        # LOGIKA POTONG & ARSIR JIKA TERLAMBAT:
         if comp_time > due_date:
             if job_start < due_date:
                 ontime_duration = due_date - job_start
