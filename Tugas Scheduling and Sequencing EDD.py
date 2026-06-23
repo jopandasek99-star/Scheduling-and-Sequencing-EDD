@@ -85,7 +85,6 @@ st.markdown("---")
 # ==========================================
 st.sidebar.header("Configuration Panel")
 st.sidebar.markdown("Configure operational status parameters or project setup references.")
-shop_status = st.sidebar.selectbox("Shop Floor Status", ["Normal Operation", "High Backlog Peak"])
 scheduling_start = st.sidebar.number_input("Scheduling Start Time (T=0)", min_value=0, value=0, step=1)
 
 # ==========================================
@@ -143,10 +142,9 @@ if df_working is not None and not df_working.empty:
     
     with t_edd[0]:
         st.subheader("EDD Priority Rule Sequence Calculations")
-        st.markdown("The EDD rule sequences jobs in ascending order of their **Due Dates**, completely independent of individual processing duration requirements.")
+        st.markdown(f"The EDD rule sequences jobs in ascending order of their Due Dates. (Current Timeline Start: **Day {scheduling_start}**)")
         
         # Core Algorithmic Logic Rule Execution
-        # Sort values based on Due Date, break ties using Processing Time if identical.
         df_edd = df_working.sort_values(by=['Due Date (Day Count)', 'Processing Time (Days)']).copy()
         
         # Calculate timeline metrics sequence array
@@ -215,49 +213,35 @@ if df_working is not None and not df_working.empty:
     cg1, cg2 = st.columns([2, 1])
     
     with cg1:
-        # Construct Gantt Bar Charts 
         fig, ax = plt.subplots(figsize=(10, 5))
         fig.patch.set_facecolor('#faf8f2')
         ax.set_facecolor('#faf8f2')
         
-        # Generate baseline tracking ranges
         y_labels = []
-        
-        # Premium custom distinct color pool to make sure every job is different
         colors_pool = ['#6a0708', '#415a77', '#2a9d8f', '#e9c46a', '#e76f51', '#264653', '#9b5de5', '#f15bb5', '#00bbf9', '#00f5d4']
         
-        # Create a mapping of actual forward execution order start times
         start_times_dict = {}
         accumulator = scheduling_start
         for index, row in df_edd.iterrows():
             start_times_dict[row['Job ID']] = accumulator
             accumulator += row['Processing Time (Days)']
 
-        # Reverse the order for the Y-axis plotting so the 1st job is on top
         df_edd_reversed = df_edd.iloc[::-1].reset_index(drop=True)
 
         for idx, row in enumerate(df_edd_reversed.itertuples()):
             job_id = row._1
             proc_time = row._2
             due_date = row._3
-            comp_time = row._4
             job_start = start_times_dict[job_id]
             
-            # Pick a unique color based on the Job's original place in the sorted sequence
-            # This ensures that each row bar gets a completely distinct color block
             original_idx = df_edd[df_edd['Job ID'] == job_id].index[0]
             bar_color = colors_pool[original_idx % len(colors_pool)]
             
-            # Plot the actual processing duration block
             ax.broken_barh([(job_start, proc_time)], (idx*10 + 2, 6), facecolors=bar_color, edgecolor='#333333', linewidth=1, alpha=0.95)
-            
-            # Display center text labels inside timeline block cells
             ax.text(job_start + proc_time/2, idx*10 + 5, f"{job_id}\n({proc_time} Hari)", 
                     ha='center', va='center', color='white', fontweight='bold', fontsize=9)
             
-            # Draw vertical guideline marker representing due dates 
             ax.axvline(x=due_date, color='#b91c1c', linestyle='--', linewidth=1.2, alpha=0.7)
-            # Add small indicator label text for Due Dates
             ax.text(due_date + 0.2, idx*10 + 7, f"DL: {due_date}", color='#b91c1c', fontsize=8, fontweight='semibold')
             
             y_labels.append(job_id)
@@ -266,10 +250,10 @@ if df_working is not None and not df_working.empty:
         ax.set_ylabel('Daftar Antrean Kerja (Job ID)', fontsize=10, fontweight='bold', color='#6a0708')
         ax.set_yticks([i*10 + 5 for i in range(len(df_edd_reversed))])
         ax.set_yticklabels(y_labels, fontsize=9, fontweight='bold')
+        ax.set_xlim(0, max(accumulator + 2, df_edd['Due Date (Day Count)'].max() + 5))
         ax.set_ylim(0, len(df_edd_reversed)*10 + 5)
         ax.grid(True, linestyle=':', alpha=0.5, axis='x')
         
-        # Clean top/right chart borders
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         
@@ -281,7 +265,7 @@ if df_working is not None and not df_working.empty:
         st.info(f"💡 **Urutan Eksekusi Mesin Tunggal:** \n**{' ➔ '.join(df_edd['Job ID'].tolist())}**")
         st.markdown(f"""
         * **Waktu Selesai Total (Makespan):** Seluruh rangkaian pengerjaan akan rampung pada hari ke-**{df_edd['Completion Time (Waktu Selesai)'].max()}**.
-        * **Keterlambatan Maksimal:** Menggunakan aturan EDD, batas keterlambatan terlama berhasil ditekan hingga maksimal **{max_tardiness} hari**.
+        * **Keterlambatan Maksimal:** Batas keterlambatan terlama berhasil ditekan hingga maksimal **{max_tardiness} hari**.
         * **Catatan Grafik:** Garis putus-putus merah (`DL`) menunjukkan batas waktu (*Due Date*). Jika kotak bar warna melewati garis merahnya, maka *job* tersebut mengalami *Tardiness* (Keterlambatan).
         """)
 
@@ -295,7 +279,6 @@ if df_working is not None and not df_working.empty:
     with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
         df_edd.to_excel(writer, sheet_name="EDD Production Schedule", index=False)
         
-        # Build brief performance logs stats meta sheet
         df_meta_summary = pd.DataFrame({
             'Performance Matrix Target': ['Average Flow Time', 'Average Tardiness', 'Maximum Tardiness'],
             'Values Calculated (Days Profile)': [avg_flow_time, avg_tardiness, max_tardiness]
